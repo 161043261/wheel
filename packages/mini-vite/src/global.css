@@ -1,0 +1,7 @@
+:root {
+  --globalColor: lightblue;
+}
+
+body {
+  background-color: var(--globalColor);
+}

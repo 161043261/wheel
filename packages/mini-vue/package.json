@@ -1,0 +1,17 @@
+{
+  "name": "mini-vue",
+  "version": "1.0.0",
+  "description": "mini-vue",
+  "private": true,
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "161043261.github.io",
+  "license": "ISC",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:161043261/wheel.git"
+  },
+  "packageManager": "pnpm@10.10.0"
+}

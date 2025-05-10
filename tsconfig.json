@@ -1,0 +1,51 @@
+{
+  // "extends": "@vue/tsconfig/tsconfig.dom.json",
+
+  "compilerOptions": {
+    "alwaysStrict": true,
+    "baseUrl": "./",
+    // "declaration": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
+    "noImplicitAny": true,
+    "sourceMap": true,
+
+    /* Alias */
+    "paths": {
+      "@wheel/*": ["packages/*/src"],
+      "*": ["src/*", "node_modules/*"]
+    },
+
+    "target": "ESNext",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+
+    /* Vue */
+    "resolveJsonModule": true,
+    "useDefineForClassFields": true
+  },
+  "include": [
+    "packages",
+    "packages/*/src/**/*.ts",
+    "packages/*/src/**/*.tsx",
+    "packages/*/src/**/*.vue",
+    "packages/vue-demo/src/vite-env.d.ts"
+  ]
+}
