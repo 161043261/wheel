@@ -1,5 +1,5 @@
 {
-  "name": "mini-compiler",
+  "name": "@wheel/mini-compiler",
   "version": "1.0.0",
   "description": "mini-compiler",
   "main": "src/index.ts",
@@ -9,14 +9,8 @@
   "files": [
     "dist"
   ],
-  "scripts": {
-    "test": "vitest --run"
-  },
   "author": "161043261.github.io",
   "license": "ISC",
-  "devDependencies": {
-    "vitest": "^3.0.6"
-  },
   "type": "module",
   "repository": {
     "type": "git",

@@ -1,5 +1,5 @@
 {
-  "name": "mini-vite",
+  "name": "@wheel/mini-vite",
   "version": "1.0.0",
   "description": "mini-vite",
   "main": "src/index.ts",

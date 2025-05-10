@@ -3,9 +3,11 @@ import { onBeforeUnmount } from "vue";
 import ChildOne from "./components/ChildOne.vue";
 import ChildTwo from "./components/ChildTwo.vue";
 import { emitter } from "./utils/bus";
+import { ohMyMitt } from "@wheel/oh-my-mitt";
 
 onBeforeUnmount(() => {
   emitter.all.clear();
+  ohMyMitt.clear();
 });
 </script>
 

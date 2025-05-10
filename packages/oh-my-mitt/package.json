@@ -1,5 +1,5 @@
 {
-  "name": "oh-my-mitt",
+  "name": "@wheel/oh-my-mitt",
   "version": "1.0.0",
   "description": "oh-my-mitt",
   "main": "src/index.ts",

@@ -1,5 +1,5 @@
 {
-  "name": "mini-react",
+  "name": "@wheel/mini-react",
   "version": "1.0.0",
   "description": "mini-react",
   "main": "src/index.ts",
