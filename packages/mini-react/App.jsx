@@ -4,7 +4,15 @@ import React from "./core/React.js";
 // const App = React.createElement("div", { id: "app" }, "placeholder");
 
 function Counter({ cnt }) {
-  return <div>counter: {cnt}</div>;
+  const handleClick = () => {
+    console.log("click");
+  };
+  return (
+    <>
+      <button onClick={handleClick}>click</button>
+      <div>counter: {cnt}</div>
+    </>
+  );
 }
 
 function CounterContainer() {

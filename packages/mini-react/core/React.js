@@ -98,6 +98,11 @@ function reconcileChildren(workOfUnit /* fiber */, children) {
 
 function updateDom(dom, props) {
   for (const key of Object.keys(props)) {
+    if (key.startsWith("on")) {
+      const eventType = key.slice(2).toLowerCase();
+      dom.addEventListener(eventType, props[key]);
+      continue;
+    }
     if (key !== "children") {
       dom[key] = props[key];
     }
