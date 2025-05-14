@@ -1,4 +1,5 @@
 function createTextNode(nodeValue) {
+  console.log("createTextNode");
   return {
     type: "TEXT_ELEMENT",
     props: {
@@ -9,6 +10,7 @@ function createTextNode(nodeValue) {
 }
 
 function createElement(type, props, ...children) {
+  console.log("createElement");
   return {
     type,
     props: {
