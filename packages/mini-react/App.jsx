@@ -1,22 +1,26 @@
+/** @jsx React.createElement */
 import React from "./core/React.js";
 
 // const App = React.createElement("div", { id: "app" }, "placeholder");
 
-function App2() {
+function Counter({ cnt }) {
+  return <div>counter: {cnt}</div>;
+}
+
+function CounterContainer() {
   return (
-    <div id="app2">
-      placeholder2
-      <div>child</div>
+    <>
+      Counters
+      <Counter cnt={3} />
+      <Counter cnt={5} />
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <div id="app">
+      <CounterContainer />
     </div>
   );
 }
-console.log(App2);
-
-const App = (
-  <div id="app">
-    placeholder
-    <div>child</div>
-  </div>
-);
-
-export default App;
