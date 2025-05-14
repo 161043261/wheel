@@ -26,6 +26,7 @@ function createElement(type, props, ...children) {
 
 let nextWorkOfUnit = null;
 let rootWorkOfUnit = null;
+let currentRoot = null;
 
 function render(vNode /* element */, container) {
   nextWorkOfUnit = {
@@ -38,6 +39,14 @@ function render(vNode /* element */, container) {
   requestIdleCallback(workLoop);
 }
 
+function update() {
+  nextWorkOfUnit = {
+    dom: currentRoot.dom,
+    props: currentRoot.props,
+  };
+  rootWorkOfUnit = nextWorkOfUnit;
+}
+
 function workLoop(deadline) {
   let shouldYield = false;
   while (!shouldYield && nextWorkOfUnit) {
@@ -48,6 +57,7 @@ function workLoop(deadline) {
   if (!nextWorkOfUnit && rootWorkOfUnit) {
     // 统一提交
     commitWorkOfUnit(rootWorkOfUnit.child);
+    currentRoot = rootWorkOfUnit;
     rootWorkOfUnit = null;
   }
   requestIdleCallback(workLoop);
