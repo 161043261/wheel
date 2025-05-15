@@ -137,6 +137,14 @@ function reconcileChildren(workOfUnit /* fiber */, children) {
 function updateDom(dom, newProps, oldProps = {}) {
   for (const key of Object.keys(oldProps)) {
     if (key !== "children" && !(key in newProps)) {
+      if (key === "className") {
+        dom.removeAttribute("class");
+        continue;
+      }
+      if (key === "htmlFor") {
+        dom.removeAttribute("for");
+        continue;
+      }
       dom.removeAttribute(key);
     }
   }
@@ -147,7 +155,7 @@ function updateDom(dom, newProps, oldProps = {}) {
     }
     if (key.startsWith("on")) {
       const eventType = key.slice(2).toLowerCase();
-      // dom.removeEventListener(eventType, oldProps[key]);
+      dom.removeEventListener(eventType, oldProps[key]);
       dom.addEventListener(eventType, newProps[key]);
     } else {
       dom[key] = newProps[key];
