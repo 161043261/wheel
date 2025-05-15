@@ -3,13 +3,15 @@ import React from "./core/React.js";
 
 // const App = React.createElement("div", { id: "app" }, "placeholder");
 
-function Counter({ cnt }) {
+let cnt = 10;
+function Counter() {
   const handleClick = () => {
-    console.log("click");
+    cnt++;
+    React.update();
   };
   return (
     <>
-      <button onClick={handleClick}>click</button>
+      <button onClick={handleClick}>cnt++</button>
       <div>cnt: {cnt}</div>
     </>
   );

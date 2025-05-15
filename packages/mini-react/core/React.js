@@ -25,8 +25,8 @@ function createElement(type, props, ...children) {
 }
 
 let nextWorkOfUnit = null;
-let rootWorkOfUnit = null;
-let currentRoot = null;
+let workInProgressFiberRoot = null; // workInProgressFiberRoot 当前处理的 Fiber 树 (保存更新后的状态)
+let currentFiberRoot = null; // currentFiberTree 当前渲染的 Fiber 树 (保存更新前的状态)
 
 function render(vNode /* element */, container) {
   nextWorkOfUnit = {
@@ -35,16 +35,16 @@ function render(vNode /* element */, container) {
       children: [vNode],
     },
   };
-  rootWorkOfUnit = nextWorkOfUnit;
-  requestIdleCallback(workLoop);
+  workInProgressFiberRoot = nextWorkOfUnit;
 }
 
 function update() {
   nextWorkOfUnit = {
-    dom: currentRoot.dom,
-    props: currentRoot.props,
+    dom: currentFiberRoot.dom,
+    props: currentFiberRoot.props,
+    alternate: currentFiberRoot,
   };
-  rootWorkOfUnit = nextWorkOfUnit;
+  workInProgressFiberRoot = nextWorkOfUnit;
 }
 
 function workLoop(deadline) {
@@ -54,11 +54,11 @@ function workLoop(deadline) {
     shouldYield = deadline.timeRemaining() < 1;
   }
 
-  if (!nextWorkOfUnit && rootWorkOfUnit) {
+  if (!nextWorkOfUnit && workInProgressFiberRoot) {
     // 统一提交
-    commitWorkOfUnit(rootWorkOfUnit.child);
-    currentRoot = rootWorkOfUnit;
-    rootWorkOfUnit = null;
+    commitWorkOfUnit(workInProgressFiberRoot.child);
+    currentFiberRoot = workInProgressFiberRoot;
+    workInProgressFiberRoot = null;
   }
   requestIdleCallback(workLoop);
 }
@@ -71,7 +71,10 @@ function commitWorkOfUnit(workOfUnit /* fiber */) {
   while (!fiberParent.dom) {
     fiberParent = fiberParent.parent;
   }
-  if (workOfUnit.dom) {
+  if (workOfUnit.effectTag === "update") {
+    updateDom(workOfUnit.dom, workOfUnit.props, workOfUnit.alternate?.props);
+  }
+  if (workOfUnit.effectTag === "placement" && workOfUnit.dom) {
     fiberParent.dom.append(workOfUnit.dom);
   }
   commitWorkOfUnit(workOfUnit.child);
@@ -85,37 +88,68 @@ function createDom(type) {
 }
 
 function reconcileChildren(workOfUnit /* fiber */, children) {
+  let oldChildWorkOfUnit = workOfUnit.alternate?.child;
   let preChildWorkOfUnit = null;
   for (let i = 0; i < children.length; i++) {
     const child = children[i];
-
-    const curChildWorkOfUnit = {
-      type: child.type,
-      props: child.props,
-      dom: null,
-      parent: workOfUnit,
-      sibling: null,
-      child: null,
-    };
-    if (i === 0) {
-      workOfUnit.child = curChildWorkOfUnit;
+    const sameType =
+      oldChildWorkOfUnit && oldChildWorkOfUnit.type === child.type;
+    let newChildWorkOfUnit;
+    if (sameType) {
+      // update
+      newChildWorkOfUnit = {
+        type: workOfUnit.type, // oldChildWorkOfUnit.type
+        props: workOfUnit.props,
+        dom: oldChildWorkOfUnit.dom,
+        parent: workOfUnit,
+        child: null,
+        sibling: null,
+        effectTag: "update",
+        alternate: oldChildWorkOfUnit,
+      };
     } else {
-      preChildWorkOfUnit.sibling = curChildWorkOfUnit;
+      // placement
+      newChildWorkOfUnit = {
+        type: child.type,
+        props: child.props,
+        dom: null,
+        parent: workOfUnit,
+        child: null,
+        sibling: null,
+        effectTag: "placement",
+      };
     }
-    preChildWorkOfUnit = curChildWorkOfUnit;
+    if (oldChildWorkOfUnit) {
+      oldChildWorkOfUnit = oldChildWorkOfUnit.sibling;
+    }
+    if (i === 0) {
+      workOfUnit.child = newChildWorkOfUnit;
+    } else {
+      preChildWorkOfUnit.sibling = newChildWorkOfUnit;
+    }
+    preChildWorkOfUnit = newChildWorkOfUnit;
   }
 }
 
-function updateDom(dom, props) {
-  for (const key of Object.keys(props)) {
-    if (key.startsWith("on")) {
-      const eventType = key.slice(2).toLowerCase();
-      dom.addEventListener(eventType, props[key]);
+function updateDom(dom, newProps, oldProps) {
+  if (oldProps) {
+    for (const key of Object.keys(oldProps)) {
+      if (key !== "children" && !(key in newProps)) {
+        dom.removeAttribute(key);
+      }
+    }
+  }
+
+  for (const key of Object.keys(newProps)) {
+    if (key === "children") {
       continue;
     }
-    if (key !== "children") {
-      dom[key] = props[key];
+    if (key.startsWith("on")) {
+      const eventType = key.slice(2).toLowerCase();
+      dom.addEventListener(eventType, newProps[key]);
+      continue;
     }
+    dom[key] = newProps[key];
   }
 }
 
@@ -145,10 +179,7 @@ function performWorkOfUnit(workOfUnit /* fiber */) {
   if (workOfUnit.child) {
     return workOfUnit.child;
   }
-  // if (workOfUnit.sibling) {
-  //   return workOfUnit.sibling;
-  // }
-  // return workOfUnit.parent?.sibling;
+
   let nextFiber = workOfUnit;
   while (nextFiber) {
     if (nextFiber.sibling) {
@@ -158,11 +189,12 @@ function performWorkOfUnit(workOfUnit /* fiber */) {
   }
 }
 
-// requestIdleCallback(workLoop);
+requestIdleCallback(workLoop);
 
 const React = {
   render,
   createElement,
+  update,
 };
 
 export default React;
