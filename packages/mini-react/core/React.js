@@ -76,27 +76,46 @@ function commitWorkInProgressFiberRoot() {
 }
 
 function commitEffectHooks() {
-  const call = (workOfUnit) => {
+  const runCallbacks = (workOfUnit) => {
     if (!workOfUnit) {
       return;
     }
     if (!workOfUnit.alternate) {
-      workOfUnit.effectHooks?.forEach((hook) => hook.callback());
+      workOfUnit.effectHooks?.forEach((hook) => {
+        hook.cleanup = hook.callback();
+      });
     } else {
       workOfUnit.effectHooks?.forEach((newHook, i) => {
+        if (!newHook.deps.length) {
+          return;
+        }
         const oldHook = workOfUnit.alternate.effectHooks[i];
         const shouldCall = oldHook?.deps.some((oldDep, j) => {
           return oldDep !== newHook.deps[j];
         });
         if (shouldCall) {
-          newHook.callback();
+          newHook.cleanup = newHook.callback();
         }
       });
     }
-    call(workOfUnit.child);
-    call(workOfUnit.sibling);
+    runCallbacks(workOfUnit.child);
+    runCallbacks(workOfUnit.sibling);
   };
-  call(workInProgressFiberRoot);
+
+  const runCleanups = (workOfUnit) => {
+    if (!workOfUnit) {
+      return;
+    }
+    workOfUnit.alternate?.effectHooks?.forEach((hook) => {
+      if (hook.deps.length && hook.cleanup) {
+        hook.cleanup();
+      }
+    });
+    runCleanups(workOfUnit.child);
+    runCleanups(workOfUnit.sibling);
+  };
+  runCleanups(workInProgressFiberRoot);
+  runCallbacks(workInProgressFiberRoot);
 }
 
 function commitDeletion(workOfUnit) {
@@ -305,6 +324,7 @@ function useEffect(callback, deps) {
   const hook = {
     callback,
     deps,
+    cleanup: null,
   };
   currentWorkOfUnit.effectHooks.push(hook);
 }

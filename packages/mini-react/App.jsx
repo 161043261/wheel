@@ -14,11 +14,24 @@ function Foo() {
 
   React.useEffect(() => {
     console.log("onMounted");
+    return () => {
+      console.log("Cleanup");
+    };
   }, []);
 
   React.useEffect(() => {
-    console.log(`cnt: ${cnt}, cnt2: ${cnt2}`);
-  }, [cnt, cnt2]);
+    console.log(`cnt: ${cnt}`);
+    return () => {
+      console.log("cnt Cleanup");
+    };
+  }, [cnt]);
+
+  React.useEffect(() => {
+    console.log(`cnt2: ${cnt2}`);
+    return () => {
+      console.log("cnt2 Cleanup");
+    };
+  }, [cnt2]);
 
   return (
     <div>
