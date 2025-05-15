@@ -1,49 +1,50 @@
 /** @jsx React.createElement */
 import React from "./core/React.js";
 
-let cntFoo = 1;
 function Foo() {
   console.log("===== foo =====");
-  const update = React.useUpdate();
+  const [cnt, setCnt] = React.useState(0);
+  const [cnt2, setCnt2] = React.useState(1);
+
   const handleClick = () => {
-    cntFoo++;
-    update();
+    setCnt((cnt) => cnt + 1);
+  };
+  const handleClick2 = () => {
+    setCnt2((cnt2) => cnt2 + 1);
   };
   return (
     <div>
-      {cntFoo}
-      <button onClick={handleClick}>addCntFoo</button>
+      <div>Foo cnt {cnt}</div>
+      <button onClick={handleClick}>addCnt</button>
+      <div>Foo cnt {cnt2}</div>
+      <button onClick={handleClick2}>addCnt2</button>
     </div>
   );
 }
 
-let cntBar = 1;
 function Bar() {
   console.log("===== bar =====");
-  const update = React.useUpdate();
+  const [cnt, setCnt] = React.useState(0);
   const handleClick = () => {
-    cntBar++;
-    update();
+    setCnt((cnt) => cnt + 1);
   };
   return (
     <div>
-      {cntBar}
-      <button onClick={handleClick}>addCntBar</button>
+      <div>Bar cnt {cnt}</div>
+      <button onClick={handleClick}>addCnt</button>
     </div>
   );
 }
 
-let cnt = 1;
 export default function App() {
   console.log("===== app =====");
-  const update = React.useUpdate();
+  const [cnt, setCnt] = React.useState(0);
   const handleClick = () => {
-    cnt++;
-    update();
+    setCnt((cnt) => cnt + 1);
   };
   return (
     <div id="app">
-      {cnt}
+      <div>App cnt {cnt}</div>
       <button onClick={handleClick}>addCnt</button>
       <Foo />
       <Bar />

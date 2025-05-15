@@ -38,7 +38,7 @@ function render(vNode /* element */, container) {
   nextWorkOfUnit = workInProgressFiberRoot;
 }
 
-function useUpdate() {
+function update() {
   let currentFiberNode = workInProgressFiberNode;
   return () => {
     workInProgressFiberRoot = {
@@ -204,8 +204,13 @@ function updateDom(dom, newProps, oldProps = {}) {
   }
 }
 
+let stateHooks = null;
+let stateHookIndex = null;
+
 function updateFunctionComponent(workOfUnit /** fiber */) {
   workInProgressFiberNode = workOfUnit;
+  stateHooks = [];
+  stateHookIndex = 0;
   const children = [workOfUnit.type(workOfUnit.props)];
   reconcileChildren(workOfUnit, children);
 }
@@ -241,12 +246,35 @@ function performWorkOfUnit(workOfUnit /* fiber */) {
   }
 }
 
+function useState(initialValue) {
+  let currentFiberNode = workInProgressFiberNode;
+  const oldStateHook = currentFiberNode.alternate?.stateHooks?.[stateHookIndex];
+  const hook = {
+    state: oldStateHook ? oldStateHook.state : initialValue,
+  };
+  stateHookIndex++;
+  stateHooks.push(hook);
+  currentFiberNode.stateHooks = stateHooks;
+
+  const setState = (action) => {
+    if (typeof action === "function") {
+      hook.state = action(hook.state);
+    }
+    workInProgressFiberRoot = {
+      ...currentFiberNode,
+      alternate: currentFiberNode,
+    };
+    nextWorkOfUnit = workInProgressFiberRoot;
+  };
+  return [hook.state, setState];
+}
+
 requestIdleCallback(workLoop);
 
 const React = {
   render,
   createElement,
-  useUpdate,
+  useState,
 };
 
 export default React;
