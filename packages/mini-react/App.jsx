@@ -3,20 +3,27 @@ import React from "./core/React.js";
 
 // const App = React.createElement("div", { id: "app" }, "placeholder");
 
-let cnt = 10;
-let props = { className: "whoami" };
+let showFoo = true;
 
 function Counter() {
   const handleClick = () => {
-    cnt++;
-    props = {};
+    showFoo = !showFoo;
     React.update();
   };
+
+  const Foo = () => (
+    <div>
+      foo
+      <div>fooChild</div>
+    </div>
+  );
+  const Bar = () => <div>bar</div>;
   return (
-    <div {...props}>
-      <label htmlFor="a"></label>
-      <button onClick={handleClick}>cnt++</button>
-      <div>cnt: {cnt}</div>
+    <div>
+      <button onClick={handleClick}>showFoo</button>
+      {/* {showFoo && <Foo />}
+      <hr /> */}
+      {showFoo ? <Foo /> : <Bar />}
     </div>
   );
 }
@@ -24,9 +31,7 @@ function Counter() {
 function CounterContainer() {
   return (
     <div>
-      Counters
-      <Counter cnt={3} />
-      <Counter cnt={5} />
+      <Counter />
     </div>
   );
 }

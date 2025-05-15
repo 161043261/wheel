@@ -23,8 +23,9 @@ function createElement(type, props, ...children) {
 }
 
 let nextWorkOfUnit = null;
-let workInProgressFiberRoot = null; // workInProgressFiberRoot 当前处理的 Fiber 树 (保存更新后的状态)
-let currentFiberRoot = null; // currentFiberTree 当前渲染的 Fiber 树 (保存更新前的状态)
+let workInProgressFiberRoot = null; // workInProgressFiberRoot 当前处理的 Fiber 树
+let currentFiberRoot = null; // currentFiberTree 当前渲染的 Fiber 树
+let deletions = [];
 
 function render(vNode /* element */, container) {
   workInProgressFiberRoot = {
@@ -59,10 +60,27 @@ function workLoop(deadline) {
 }
 
 function commitWorkInProgressFiberRoot() {
+  deletions.forEach(commitDeletion);
   // 统一提交
   commitWorkOfUnit(workInProgressFiberRoot.child);
   currentFiberRoot = workInProgressFiberRoot;
   workInProgressFiberRoot = null;
+  deletions = [];
+}
+
+function commitDeletion(fiberNode) {
+  if (!fiberNode) {
+    return;
+  }
+  if (fiberNode.dom) {
+    let fiberParent = fiberNode.parent;
+    while (!fiberParent.dom) {
+      fiberParent = fiberParent.parent;
+    }
+    fiberParent.dom.removeChild(fiberNode.dom);
+  } else {
+    commitDeletion(fiberNode.child);
+  }
 }
 
 function commitWorkOfUnit(workOfUnit /* fiber */) {
@@ -92,17 +110,16 @@ function createDom(type) {
 function reconcileChildren(workOfUnit /* fiber */, children) {
   let oldChildWorkOfUnit = workOfUnit.alternate?.child;
   let preChildWorkOfUnit = null;
-  for (let i = 0; i < children.length; i++) {
-    const child = children[i];
-    let newChildWorkOfUnit;
+  for (const childWorkOfUnit of children) {
+    let newChildWorkOfUnit = null;
 
     const isSameType =
-      oldChildWorkOfUnit && oldChildWorkOfUnit.type === child.type;
+      oldChildWorkOfUnit && oldChildWorkOfUnit.type === childWorkOfUnit.type;
     if (isSameType) {
       // update
       newChildWorkOfUnit = {
-        type: child.type, // oldChildWorkOfUnit.type
-        props: child.props,
+        type: oldChildWorkOfUnit.type, // oldChildWorkOfUnit.type
+        props: childWorkOfUnit.props,
         dom: oldChildWorkOfUnit.dom, // 复用 dom
         parent: workOfUnit,
         child: null,
@@ -112,25 +129,37 @@ function reconcileChildren(workOfUnit /* fiber */, children) {
       };
     } else {
       // placement
-      newChildWorkOfUnit = {
-        type: child.type,
-        props: child.props,
-        dom: null,
-        parent: workOfUnit,
-        child: null,
-        sibling: null,
-        effectTag: "placement",
-      };
+      if (childWorkOfUnit) {
+        newChildWorkOfUnit = {
+          type: childWorkOfUnit.type,
+          props: childWorkOfUnit.props,
+          dom: null,
+          parent: workOfUnit,
+          child: null,
+          sibling: null,
+          effectTag: "placement",
+        };
+      }
+      if (oldChildWorkOfUnit) {
+        deletions.push(oldChildWorkOfUnit);
+      }
     }
     if (oldChildWorkOfUnit) {
       oldChildWorkOfUnit = oldChildWorkOfUnit.sibling;
     }
-    if (i === 0) {
+    if (!preChildWorkOfUnit) {
       workOfUnit.child = newChildWorkOfUnit;
     } else {
       preChildWorkOfUnit.sibling = newChildWorkOfUnit;
     }
-    preChildWorkOfUnit = newChildWorkOfUnit;
+    if (newChildWorkOfUnit) {
+      preChildWorkOfUnit = newChildWorkOfUnit;
+    }
+  }
+
+  while (oldChildWorkOfUnit) {
+    deletions.push(oldChildWorkOfUnit);
+    oldChildWorkOfUnit = oldChildWorkOfUnit.sibling;
   }
 }
 
