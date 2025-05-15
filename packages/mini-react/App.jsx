@@ -2,16 +2,24 @@
 import React from "./core/React.js";
 
 function Foo() {
-  console.log("===== foo =====");
   const [cnt, setCnt] = React.useState(0);
   const [cnt2, setCnt2] = React.useState(1);
 
   const handleClick = () => {
-    setCnt((cnt) => cnt + 1);
+    setCnt(cnt + 1);
   };
   const handleClick2 = () => {
-    setCnt2((cnt2) => cnt2 + 1);
+    setCnt2((cnt2) => cnt2);
   };
+
+  React.useEffect(() => {
+    console.log("onMounted");
+  }, []);
+
+  React.useEffect(() => {
+    console.log(`cnt: ${cnt}, cnt2: ${cnt2}`);
+  }, [cnt, cnt2]);
+
   return (
     <div>
       <div>Foo cnt {cnt}</div>
@@ -22,32 +30,10 @@ function Foo() {
   );
 }
 
-function Bar() {
-  console.log("===== bar =====");
-  const [cnt, setCnt] = React.useState(0);
-  const handleClick = () => {
-    setCnt((cnt) => cnt + 1);
-  };
-  return (
-    <div>
-      <div>Bar cnt {cnt}</div>
-      <button onClick={handleClick}>addCnt</button>
-    </div>
-  );
-}
-
 export default function App() {
-  console.log("===== app =====");
-  const [cnt, setCnt] = React.useState(0);
-  const handleClick = () => {
-    setCnt((cnt) => cnt + 1);
-  };
   return (
     <div id="app">
-      <div>App cnt {cnt}</div>
-      <button onClick={handleClick}>addCnt</button>
       <Foo />
-      <Bar />
     </div>
   );
 }

@@ -23,10 +23,10 @@ function createElement(type, props, ...children) {
 }
 
 let nextWorkOfUnit = null;
+let workInProgressFiberNode = null;
 let workInProgressFiberRoot = null; // workInProgressFiberRoot 当前处理的 Fiber 树
 let currentFiberRoot = null; // currentFiberTree 当前渲染的 Fiber 树
 let deletions = [];
-let workInProgressFiberNode = null;
 
 function render(vNode /* element */, container) {
   workInProgressFiberRoot = {
@@ -39,11 +39,11 @@ function render(vNode /* element */, container) {
 }
 
 function update() {
-  let currentFiberNode = workInProgressFiberNode;
+  let currentWorkOfUnit = workInProgressFiberNode;
   return () => {
     workInProgressFiberRoot = {
-      ...currentFiberNode,
-      alternate: currentFiberNode,
+      ...currentWorkOfUnit,
+      alternate: currentWorkOfUnit,
     };
     nextWorkOfUnit = workInProgressFiberRoot;
   };
@@ -69,27 +69,52 @@ function commitWorkInProgressFiberRoot() {
   deletions.forEach(commitDeletion);
   // 统一提交
   commitWorkOfUnit(workInProgressFiberRoot.child);
+  commitEffectHooks();
   currentFiberRoot = workInProgressFiberRoot;
   workInProgressFiberRoot = null;
   deletions = [];
 }
 
-function commitDeletion(fiberNode) {
-  if (!fiberNode) {
+function commitEffectHooks() {
+  const call = (workOfUnit) => {
+    if (!workOfUnit) {
+      return;
+    }
+    if (!workOfUnit.alternate) {
+      workOfUnit.effectHooks?.forEach((hook) => hook.callback());
+    } else {
+      workOfUnit.effectHooks?.forEach((newHook, i) => {
+        const oldHook = workOfUnit.alternate.effectHooks[i];
+        const shouldCall = oldHook?.deps.some((oldDep, j) => {
+          return oldDep !== newHook.deps[j];
+        });
+        if (shouldCall) {
+          newHook.callback();
+        }
+      });
+    }
+    call(workOfUnit.child);
+    call(workOfUnit.sibling);
+  };
+  call(workInProgressFiberRoot);
+}
+
+function commitDeletion(workOfUnit) {
+  if (!workOfUnit) {
     return;
   }
-  if (fiberNode.dom) {
-    let fiberParent = fiberNode.parent;
+  if (workOfUnit.dom) {
+    let fiberParent = workOfUnit.parent;
     while (!fiberParent.dom) {
       fiberParent = fiberParent.parent;
     }
-    fiberParent.dom.removeChild(fiberNode.dom);
+    fiberParent.dom.removeChild(workOfUnit.dom);
   } else {
-    commitDeletion(fiberNode.child);
+    commitDeletion(workOfUnit.child);
   }
 }
 
-function commitWorkOfUnit(workOfUnit /* fiber */) {
+function commitWorkOfUnit(workOfUnit) {
   if (!workOfUnit) {
     return;
   }
@@ -113,7 +138,7 @@ function createDom(type) {
     : document.createElement(type);
 }
 
-function reconcileChildren(workOfUnit /* fiber */, children) {
+function reconcileChildren(workOfUnit, children) {
   let oldChildWorkOfUnit = workOfUnit.alternate?.child;
   let preChildWorkOfUnit = null;
   for (const childWorkOfUnit of children) {
@@ -202,15 +227,16 @@ function updateDom(dom, newProps, oldProps = {}) {
 // let stateHooks = null;
 // let stateHookIndex = null;
 
-function updateFunctionComponent(workOfUnit /** fiber */) {
+function updateFunctionComponent(workOfUnit) {
   workInProgressFiberNode = workOfUnit;
   workOfUnit.stateHooks = [];
   workOfUnit.stateHookIndex = 0;
+  workOfUnit.effectHooks = [];
   const children = [workOfUnit.type(workOfUnit.props)];
   reconcileChildren(workOfUnit, children);
 }
 
-function updateHostComponent(workOfUnit /** fiber */) {
+function updateHostComponent(workOfUnit) {
   if (!workOfUnit.dom) {
     const dom = createDom(workOfUnit.type);
     updateDom(dom, workOfUnit.props);
@@ -220,7 +246,7 @@ function updateHostComponent(workOfUnit /** fiber */) {
   reconcileChildren(workOfUnit, children);
 }
 
-function performWorkOfUnit(workOfUnit /* fiber */) {
+function performWorkOfUnit(workOfUnit) {
   const isFunctionComponent = typeof workOfUnit.type === "function";
   if (isFunctionComponent) {
     updateFunctionComponent(workOfUnit);
@@ -242,31 +268,45 @@ function performWorkOfUnit(workOfUnit /* fiber */) {
 }
 
 function useState(initialValue) {
-  let currentFiberNode = workInProgressFiberNode;
+  let currentWorkOfUnit = workInProgressFiberNode;
   const oldStateHook =
-    currentFiberNode.alternate?.stateHooks?.[currentFiberNode.stateHookIndex];
+    currentWorkOfUnit.alternate?.stateHooks?.[currentWorkOfUnit.stateHookIndex];
   const hook = {
-    // oldStateHook.state && initialValue;
     state: oldStateHook ? oldStateHook.state : initialValue,
-    actionQueue: [],
+    // oldStateHook?.queue && [],
+    // oldStateHook?.queue ?? [],
+    queue: [],
   };
-  oldStateHook?.actionQueue?.forEach((action) => {
+  oldStateHook?.queue?.forEach((action) => {
     hook.state = action(hook.state);
   });
+  // hook.queue = [];
 
-  currentFiberNode.stateHooks.push(hook);
-  currentFiberNode.stateHookIndex++;
+  currentWorkOfUnit.stateHooks.push(hook);
+  currentWorkOfUnit.stateHookIndex++;
   const setState = (action) => {
-    if (typeof action === "function") {
-      hook.actionQueue.push(action);
+    const eagerState =
+      typeof action === "function" ? action(hook.state) : action;
+    if (eagerState === hook.state) {
+      return;
     }
+    hook.queue.push(typeof action === "function" ? action : () => action);
     workInProgressFiberRoot = {
-      ...currentFiberNode,
-      alternate: currentFiberNode,
+      ...currentWorkOfUnit,
+      alternate: currentWorkOfUnit,
     };
     nextWorkOfUnit = workInProgressFiberRoot;
   };
   return [hook.state, setState];
+}
+
+function useEffect(callback, deps) {
+  let currentWorkOfUnit = workInProgressFiberNode;
+  const hook = {
+    callback,
+    deps,
+  };
+  currentWorkOfUnit.effectHooks.push(hook);
 }
 
 requestIdleCallback(workLoop);
@@ -275,6 +315,7 @@ const React = {
   render,
   createElement,
   useState,
+  useEffect,
 };
 
 export default React;
