@@ -1,45 +1,52 @@
 /** @jsx React.createElement */
 import React from "./core/React.js";
 
-// const App = React.createElement("div", { id: "app" }, "placeholder");
-
-let showFoo = true;
-
-function Counter() {
+let cntFoo = 1;
+function Foo() {
+  console.log("===== foo =====");
+  const update = React.useUpdate();
   const handleClick = () => {
-    showFoo = !showFoo;
-    React.update();
+    cntFoo++;
+    update();
   };
-
-  const Foo = () => (
-    <div>
-      foo
-      <div>fooChild</div>
-    </div>
-  );
-  const Bar = () => <div>bar</div>;
   return (
     <div>
-      <button onClick={handleClick}>showFoo</button>
-      {/* {showFoo && <Foo />}
-      <hr /> */}
-      {showFoo ? <Foo /> : <Bar />}
+      {cntFoo}
+      <button onClick={handleClick}>addCntFoo</button>
     </div>
   );
 }
 
-function CounterContainer() {
+let cntBar = 1;
+function Bar() {
+  console.log("===== bar =====");
+  const update = React.useUpdate();
+  const handleClick = () => {
+    cntBar++;
+    update();
+  };
   return (
     <div>
-      <Counter />
+      {cntBar}
+      <button onClick={handleClick}>addCntBar</button>
     </div>
   );
 }
 
+let cnt = 1;
 export default function App() {
+  console.log("===== app =====");
+  const update = React.useUpdate();
+  const handleClick = () => {
+    cnt++;
+    update();
+  };
   return (
     <div id="app">
-      <CounterContainer />
+      {cnt}
+      <button onClick={handleClick}>addCnt</button>
+      <Foo />
+      <Bar />
     </div>
   );
 }

@@ -26,6 +26,7 @@ let nextWorkOfUnit = null;
 let workInProgressFiberRoot = null; // workInProgressFiberRoot 当前处理的 Fiber 树
 let currentFiberRoot = null; // currentFiberTree 当前渲染的 Fiber 树
 let deletions = [];
+let workInProgressFiberNode = null;
 
 function render(vNode /* element */, container) {
   workInProgressFiberRoot = {
@@ -37,19 +38,29 @@ function render(vNode /* element */, container) {
   nextWorkOfUnit = workInProgressFiberRoot;
 }
 
-function update() {
-  workInProgressFiberRoot = {
-    dom: currentFiberRoot.dom,
-    props: currentFiberRoot.props,
-    alternate: currentFiberRoot,
+function useUpdate() {
+  let currentFiberNode = workInProgressFiberNode;
+  return () => {
+    workInProgressFiberRoot = {
+      ...currentFiberNode,
+      alternate: currentFiberNode,
+    };
+    // workInProgressFiberRoot = {
+    //   dom: currentFiberRoot.dom,
+    //   props: currentFiberRoot.props,
+    //   alternate: currentFiberRoot,
+    // };
+    nextWorkOfUnit = workInProgressFiberRoot;
   };
-  nextWorkOfUnit = workInProgressFiberRoot;
 }
 
 function workLoop(deadline) {
   let shouldYield = false;
   while (!shouldYield && nextWorkOfUnit) {
     nextWorkOfUnit /** nextWorkOfUnit */ = performWorkOfUnit(nextWorkOfUnit);
+    if (workInProgressFiberRoot?.sibling === nextWorkOfUnit) {
+      nextWorkOfUnit = null;
+    }
     shouldYield = deadline.timeRemaining() < 1;
   }
 
@@ -148,6 +159,7 @@ function reconcileChildren(workOfUnit /* fiber */, children) {
       oldChildWorkOfUnit = oldChildWorkOfUnit.sibling;
     }
     if (!preChildWorkOfUnit) {
+      // todo: if (index === 0)
       workOfUnit.child = newChildWorkOfUnit;
     } else {
       preChildWorkOfUnit.sibling = newChildWorkOfUnit;
@@ -193,6 +205,7 @@ function updateDom(dom, newProps, oldProps = {}) {
 }
 
 function updateFunctionComponent(workOfUnit /** fiber */) {
+  workInProgressFiberNode = workOfUnit;
   const children = [workOfUnit.type(workOfUnit.props)];
   reconcileChildren(workOfUnit, children);
 }
@@ -233,7 +246,7 @@ requestIdleCallback(workLoop);
 const React = {
   render,
   createElement,
-  update,
+  useUpdate,
 };
 
 export default React;
