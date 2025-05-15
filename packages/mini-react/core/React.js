@@ -1,5 +1,4 @@
 function createTextNode(nodeValue) {
-  // console.log("createTextNode");
   return {
     type: "TEXT_ELEMENT",
     props: {
@@ -10,7 +9,6 @@ function createTextNode(nodeValue) {
 }
 
 function createElement(type, props, ...children) {
-  // console.log("createElement");
   return {
     type,
     props: {
@@ -29,22 +27,22 @@ let workInProgressFiberRoot = null; // workInProgressFiberRoot 当前处理的 F
 let currentFiberRoot = null; // currentFiberTree 当前渲染的 Fiber 树 (保存更新前的状态)
 
 function render(vNode /* element */, container) {
-  nextWorkOfUnit = {
+  workInProgressFiberRoot = {
     dom: container,
     props: {
       children: [vNode],
     },
   };
-  workInProgressFiberRoot = nextWorkOfUnit;
+  nextWorkOfUnit = workInProgressFiberRoot;
 }
 
 function update() {
-  nextWorkOfUnit = {
+  workInProgressFiberRoot = {
     dom: currentFiberRoot.dom,
     props: currentFiberRoot.props,
     alternate: currentFiberRoot,
   };
-  workInProgressFiberRoot = nextWorkOfUnit;
+  nextWorkOfUnit = workInProgressFiberRoot;
 }
 
 function workLoop(deadline) {
@@ -55,12 +53,16 @@ function workLoop(deadline) {
   }
 
   if (!nextWorkOfUnit && workInProgressFiberRoot) {
-    // 统一提交
-    commitWorkOfUnit(workInProgressFiberRoot.child);
-    currentFiberRoot = workInProgressFiberRoot;
-    workInProgressFiberRoot = null;
+    commitWorkInProgressFiberRoot();
   }
   requestIdleCallback(workLoop);
+}
+
+function commitWorkInProgressFiberRoot() {
+  // 统一提交
+  commitWorkOfUnit(workInProgressFiberRoot.child);
+  currentFiberRoot = workInProgressFiberRoot;
+  workInProgressFiberRoot = null;
 }
 
 function commitWorkOfUnit(workOfUnit /* fiber */) {
@@ -92,15 +94,16 @@ function reconcileChildren(workOfUnit /* fiber */, children) {
   let preChildWorkOfUnit = null;
   for (let i = 0; i < children.length; i++) {
     const child = children[i];
-    const sameType =
-      oldChildWorkOfUnit && oldChildWorkOfUnit.type === child.type;
     let newChildWorkOfUnit;
-    if (sameType) {
+
+    const isSameType =
+      oldChildWorkOfUnit && oldChildWorkOfUnit.type === child.type;
+    if (isSameType) {
       // update
       newChildWorkOfUnit = {
-        type: workOfUnit.type, // oldChildWorkOfUnit.type
-        props: workOfUnit.props,
-        dom: oldChildWorkOfUnit.dom,
+        type: child.type, // oldChildWorkOfUnit.type
+        props: child.props,
+        dom: oldChildWorkOfUnit.dom, // 复用 dom
         parent: workOfUnit,
         child: null,
         sibling: null,
@@ -131,25 +134,24 @@ function reconcileChildren(workOfUnit /* fiber */, children) {
   }
 }
 
-function updateDom(dom, newProps, oldProps) {
-  if (oldProps) {
-    for (const key of Object.keys(oldProps)) {
-      if (key !== "children" && !(key in newProps)) {
-        dom.removeAttribute(key);
-      }
+function updateDom(dom, newProps, oldProps = {}) {
+  for (const key of Object.keys(oldProps)) {
+    if (key !== "children" && !(key in newProps)) {
+      dom.removeAttribute(key);
     }
   }
 
   for (const key of Object.keys(newProps)) {
-    if (key === "children") {
+    if (key === "children" || oldProps[key] === newProps[key]) {
       continue;
     }
     if (key.startsWith("on")) {
       const eventType = key.slice(2).toLowerCase();
+      // dom.removeEventListener(eventType, oldProps[key]);
       dom.addEventListener(eventType, newProps[key]);
-      continue;
+    } else {
+      dom[key] = newProps[key];
     }
-    dom[key] = newProps[key];
   }
 }
 
@@ -180,12 +182,12 @@ function performWorkOfUnit(workOfUnit /* fiber */) {
     return workOfUnit.child;
   }
 
-  let nextFiber = workOfUnit;
-  while (nextFiber) {
-    if (nextFiber.sibling) {
-      return nextFiber.sibling;
+  let nextFiberNode = workOfUnit;
+  while (nextFiberNode) {
+    if (nextFiberNode.sibling) {
+      return nextFiberNode.sibling;
     }
-    nextFiber = nextFiber.parent;
+    nextFiberNode = nextFiberNode.parent;
   }
 }
 
