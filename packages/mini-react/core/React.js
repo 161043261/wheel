@@ -45,11 +45,6 @@ function update() {
       ...currentFiberNode,
       alternate: currentFiberNode,
     };
-    // workInProgressFiberRoot = {
-    //   dom: currentFiberRoot.dom,
-    //   props: currentFiberRoot.props,
-    //   alternate: currentFiberRoot,
-    // };
     nextWorkOfUnit = workInProgressFiberRoot;
   };
 }
@@ -204,13 +199,13 @@ function updateDom(dom, newProps, oldProps = {}) {
   }
 }
 
-let stateHooks = null;
-let stateHookIndex = null;
+// let stateHooks = null;
+// let stateHookIndex = null;
 
 function updateFunctionComponent(workOfUnit /** fiber */) {
   workInProgressFiberNode = workOfUnit;
-  stateHooks = [];
-  stateHookIndex = 0;
+  workOfUnit.stateHooks = [];
+  workOfUnit.stateHookIndex = 0;
   const children = [workOfUnit.type(workOfUnit.props)];
   reconcileChildren(workOfUnit, children);
 }
@@ -248,17 +243,22 @@ function performWorkOfUnit(workOfUnit /* fiber */) {
 
 function useState(initialValue) {
   let currentFiberNode = workInProgressFiberNode;
-  const oldStateHook = currentFiberNode.alternate?.stateHooks?.[stateHookIndex];
+  const oldStateHook =
+    currentFiberNode.alternate?.stateHooks?.[currentFiberNode.stateHookIndex];
   const hook = {
+    // oldStateHook.state && initialValue;
     state: oldStateHook ? oldStateHook.state : initialValue,
+    actionQueue: [],
   };
-  stateHookIndex++;
-  stateHooks.push(hook);
-  currentFiberNode.stateHooks = stateHooks;
+  oldStateHook?.actionQueue?.forEach((action) => {
+    hook.state = action(hook.state);
+  });
 
+  currentFiberNode.stateHooks.push(hook);
+  currentFiberNode.stateHookIndex++;
   const setState = (action) => {
     if (typeof action === "function") {
-      hook.state = action(hook.state);
+      hook.actionQueue.push(action);
     }
     workInProgressFiberRoot = {
       ...currentFiberNode,
