@@ -1,0 +1,15 @@
+{
+  "name": "@wheel/react-demo",
+  "version": "0.0.0",
+  "description": "react-demo",
+  "type": "module",
+  "author": "161043261.github.io",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:161043261/wheel.git"
+  },
+  "packageManager": "pnpm@10.10.0",
+  "dependencies": {
+    "@wheel/oh-my-zustand": "workspace:^"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "@wheel/webpack-demo",
+  "version": "1.0.0",
+  "description": "webpack-demo",
+  "private": true,
+  "keywords": [],
+  "scripts": {
+    "dev-remote": "cd ./remote && webpack-dev-server",
+    "build-remote": "cd ./remote && webpack",
+    "dev-host": "cd ./host && webpack-dev-server",
+    "build-host": "cd ./host && webpack"
+  },
+  "author": "161043261.github.io",
+  "license": "ISC",
+  "packageManager": "pnpm@10.10.0",
+  "type": "module"
+}

@@ -1,0 +1,20 @@
+{
+  "name": "@wheel/mini-compiler",
+  "version": "1.0.0",
+  "description": "mini-compiler",
+  "main": "src/index.ts",
+  "publishConfig": {
+    "main": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "author": "161043261.github.io",
+  "license": "ISC",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:161043261/wheel.git"
+  },
+  "packageManager": "pnpm@10.10.0"
+}
