@@ -15,5 +15,10 @@
     "jest-environment-jsdom": "^30.0.5",
     "lint-staged": "^16.1.2",
     "prettier": "^3.6.2"
+  },
+  "lint-staged": {
+    "*.{vue,js,cjs,mjs,jsx,ts,cts,mts,tsx,json,css,scss,md,mdx}": [
+      "pnpm format"
+    ]
   }
 }

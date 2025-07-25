@@ -42,7 +42,7 @@ describe("oh-my-zustand", () => {
     }));
 
     const { result: cnt } = renderHook(() =>
-      useCntStore2((state) => state.cnt)
+      useCntStore2((state) => state.cnt),
     );
     const { result } = renderHook(() => useCntStore2() as ICntStore);
     expect(cnt.current).toBe(0);

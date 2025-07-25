@@ -6,14 +6,14 @@ type StateSlice<TState> = TState | Partial<TState> | GetStateSlice<TState>;
 
 type StateCreator<TState> = (
   set: (partial: StateSlice<TState>) => void,
-  get: () => TState
+  get: () => TState,
 ) => TState;
 
 type Selector<TState> = (state: TState) => TState[keyof TState];
 
 type Listener<TState> = (
   newState: TState | Partial<TState>,
-  oldState: TState
+  oldState: TState,
 ) => void;
 
 type Off = () => void;
@@ -62,11 +62,11 @@ function createStore<TState>(createState: StateCreator<TState>) {
 
 function useStore<TState>(
   store: IStore<TState>,
-  selector?: Selector<TState>
+  selector?: Selector<TState>,
 ): TState | TState[keyof TState] {
   const state: TState = useSyncExternalStore(
     store.subscribe, // subscribe
-    store.getState // getSnapshot
+    store.getState, // getSnapshot
   );
   if (selector) {
     return selector(state);
