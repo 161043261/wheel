@@ -68,10 +68,7 @@ function useStore<TState>(
     store.subscribe, // subscribe
     store.getState, // getSnapshot
   );
-  if (selector) {
-    return selector(state);
-  }
-  return state;
+  return selector ? selector(state) : state;
 }
 
 export function create<TState>(createState: StateCreator<TState>) {
