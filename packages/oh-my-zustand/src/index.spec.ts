@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { create as create2 } from "./";
-import { renderHook } from "@testing-library/react";
-import { act } from "react";
+import { renderHook, act } from "@testing-library/react";
 
 interface ICntStore {
   cnt: number;
