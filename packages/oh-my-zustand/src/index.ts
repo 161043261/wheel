@@ -69,7 +69,7 @@ function useStore<TState>(
     store.getState // getSnapshot
   );
   if (selector) {
-    selector(state);
+    return selector(state);
   }
   return state;
 }

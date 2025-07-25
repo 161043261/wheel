@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { create as create2 } from "./";
+import { renderHook } from "@testing-library/react";
+import { act } from "react";
 
 interface ICntStore {
   cnt: number;
@@ -17,18 +19,18 @@ describe("oh-my-zustand", () => {
       resetCnt: () => set({ cnt: 0 }),
     }));
 
-    const cnt = useCntStore((state) => state.cnt);
-    const { incCnt, decCnt, resetCnt } = useCntStore();
-    expect(cnt).toBe(0);
+    const { result: cnt } = renderHook(() => useCntStore((state) => state.cnt));
+    const { result } = renderHook(() => useCntStore());
+    expect(cnt.current).toBe(0);
 
-    incCnt();
-    expect(cnt).toBe(1);
+    act(() => result.current.incCnt());
+    expect(cnt.current).toBe(1);
 
-    resetCnt();
-    expect(cnt).toBe(0);
+    act(() => result.current.resetCnt());
+    expect(cnt.current).toBe(0);
 
-    decCnt();
-    expect(cnt).toBe(-1);
+    act(() => result.current.decCnt());
+    expect(cnt.current).toBe(-1);
   });
 
   it("create store2", () => {
@@ -39,18 +41,19 @@ describe("oh-my-zustand", () => {
       resetCnt: () => set({ cnt: 0 }),
     }));
 
-    const cnt = useCntStore2((state) => state.cnt) as number;
-    const { incCnt, decCnt, resetCnt } = useCntStore2() as ICntStore;
+    const { result: cnt } = renderHook(() =>
+      useCntStore2((state) => state.cnt)
+    );
+    const { result } = renderHook(() => useCntStore2() as ICntStore);
+    expect(cnt.current).toBe(0);
 
-    expect(cnt).toBe(0);
+    act(() => result.current.incCnt());
+    expect(cnt.current).toBe(1);
 
-    incCnt();
-    expect(cnt).toBe(1);
+    act(() => result.current.resetCnt());
+    expect(cnt.current).toBe(0);
 
-    resetCnt();
-    expect(cnt).toBe(0);
-
-    decCnt();
-    expect(cnt).toBe(-1);
+    act(() => result.current.decCnt());
+    expect(cnt.current).toBe(-1);
   });
 });
