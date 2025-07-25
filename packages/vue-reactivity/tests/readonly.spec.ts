@@ -1,4 +1,5 @@
 import { isReadonly, readonly } from "../reactive";
+import { describe, it, expect, vi } from "vitest";
 
 describe("readonly", () => {
   it("test1", () => {
@@ -13,9 +14,8 @@ describe("readonly", () => {
     expect(isReadonly(original.bar)).toBe(false);
   });
 
-  // jest ./packages/reactivity/tests/readonly.spec.ts -t test2
   it("test2", () => {
-    console.warn = jest.fn();
+    console.warn = vi.fn();
     const user = readonly({ age: 10 });
     user.age = 11;
     expect(console.warn).toHaveBeenCalled();

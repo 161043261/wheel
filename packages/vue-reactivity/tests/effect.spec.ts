@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { reactive } from "../reactive";
 import { effect, stop } from "../effect";
+import { describe, it, expect, vi } from "vitest";
 
 describe("effect" /** 测试套件名 */, () => {
   it(/* .skip 跳过测试 */ "test" /* 测试用例名 */, () => {
@@ -36,7 +37,7 @@ describe("effect" /** 测试套件名 */, () => {
   it("scheduler", () => {
     let dummy;
     let run: any;
-    const scheduler = jest.fn(() => {
+    const scheduler = vi.fn(() => {
       run = runner;
     });
     const obj = reactive({ foo: 1 });
@@ -78,7 +79,7 @@ describe("effect" /** 测试套件名 */, () => {
 
   it("onStop", () => {
     const obj = reactive({ foo: 1 });
-    const onStop = jest.fn();
+    const onStop = vi.fn();
     let dummy;
     const runner = effect(
       () => {

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { create as create2 } from "./";
 import { renderHook, act } from "@testing-library/react";
+import { describe, it, expect } from "vitest";
 
 interface ICntStore {
   cnt: number;
