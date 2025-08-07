@@ -7,7 +7,7 @@ let shouldTrack = true;
 
 const targetMap = new WeakMap<
   object,
-  Map<string | symbol, Set<ReactiveEffect>> // key2deps
+  Map<string, Set<ReactiveEffect>> // key2deps
 >();
 
 class ReactiveEffect {
@@ -63,13 +63,13 @@ export function effect(
   return runner;
 }
 
-export function track(target: object, key: string | symbol) {
+export function track(target: object, key: string) {
   if (!activeEffect || !shouldTrack) {
     return;
   }
   let key2deps = targetMap.get(target);
   if (!key2deps) {
-    key2deps = new Map<string | symbol, Set<ReactiveEffect>>();
+    key2deps = new Map<string, Set<ReactiveEffect>>();
     targetMap.set(target, key2deps);
   }
   let deps = key2deps.get(key);
@@ -84,7 +84,7 @@ export function track(target: object, key: string | symbol) {
   activeEffect.depsList.push(deps);
 }
 
-export function trigger(target: object, key: string | symbol) {
+export function trigger(target: object, key: string) {
   const keyEffects = targetMap.get(target);
   const effects = keyEffects?.get(key);
   if (!effects) {

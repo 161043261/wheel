@@ -4,10 +4,7 @@ import { reactive, readonly, ReactiveFlags } from "./reactive";
 
 function createGetter(isReadonly = false, shallow = false) {
   // 拦截 get 操作
-  return function get<T extends object>(
-    target: T,
-    key: string | symbol,
-  ): unknown {
+  return function get<T extends object>(target: T, key: string): unknown {
     if (key === ReactiveFlags.IS_REACTIVE) {
       return !isReadonly;
     }
@@ -36,12 +33,12 @@ function createSetter(isReadonly = false) {
   // 拦截 set 操作
   return function set<T extends object>(
     target: T,
-    key: string | symbol,
-    value: unknown,
+    key: string,
+    value: unknown
   ): boolean {
     if (isReadonly) {
       console.warn(
-        `readonly key=${key.toString()}, value=${JSON.stringify(value)}`,
+        `readonly key=${key.toString()}, value=${JSON.stringify(value)}`
       );
       return true;
     }
