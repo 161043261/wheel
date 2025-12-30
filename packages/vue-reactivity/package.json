@@ -1,0 +1,10 @@
+{
+  "name": "@wheel/vue-reactivity",
+  "version": "1.0.0",
+  "private": true,
+  "license": "ISC",
+  "packageManager": "pnpm@10.10.0",
+  "devDependencies": {
+    "@wheel/vue-shared": "workspace:*"
+  }
+}
