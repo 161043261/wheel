@@ -11,16 +11,15 @@ export class TcpConnection {
   public id = uuid();
   public state = ConnectionState.IDLE;
   public socket?: Socket | undefined = undefined;
-  private readyCheckTimer?: NodeJS.Timeout | undefined = undefined;
+  // private readyCheckTimer?: NodeJS.Timeout | undefined = undefined;
   private errorHooks: Set<(error: Error) => void> = new Set();
   private handleError?: (error: Error) => void;
   private handleSendError?: (error: Error) => void;
-  private handleSocketClose: () => void = () => {
-    this.triggerError(new Error("TCP connection has been closed unexpectedly"));
-  };
-  private handleSocketReady?: () => void;
-  private handleSocketData?: (data: Buffer) => void;
-  private handleSocketTimeout?: () => void;
+  private handleClose?: () => void;
+  private handleConnect?: () => void;
+  // private handleSocketReady?: () => void;
+  private handleData?: (data: Buffer) => void;
+  private handleTimeout?: () => void;
 
   constructor(
     private remoteHost: string,
@@ -34,7 +33,29 @@ export class TcpConnection {
 
   initialize(): Promise<TcpConnection> {
     return new Promise<TcpConnection>((resolve, reject) => {
+      const cleanup = () => {
+        if (this.handleConnect) {
+          this.socket?.removeListener("connect", this.handleConnect);
+        }
+        if (this.handleError) {
+          this.socket?.removeListener("error", this.handleError);
+        }
+        if (this.handleClose) {
+          this.socket?.removeListener("close", this.handleClose);
+        }
+      };
+
       this.handleError = (error: Error) => {
+        cleanup();
+        this.triggerError(error);
+        reject(error);
+      };
+
+      this.handleClose = () => {
+        cleanup();
+        const error = new Error(
+          "TCP connection has been closed unexpectedly during initialization",
+        );
         this.triggerError(error);
         reject(error);
       };
@@ -49,44 +70,33 @@ export class TcpConnection {
       // For decreasing latency.
       this.socket.setNoDelay();
 
-      this.handleSocketReady = () => {
-        const checkSocketReady = () => {
-          if (this.state === ConnectionState.DESTROYED || !this.socket) {
-            const error = new Error(
-              "TCP connection has been destroyed or is undefined",
-            );
-            this.handleError?.(error);
-            return;
-          }
-          // If the stream is connecting socket.readyState is opening.
-          // If the stream is readable and writable, it is open.
-          if (this.socket.readyState === "opening") {
-            this.readyCheckTimer = setTimeout(checkSocketReady, 100);
-            return;
-          }
-          if (this.socket.readyState === "open") {
-            resolve(this);
-            return;
-          }
-          const error = new Error(
-            `Unexpected TCP socket readyState: ${this.socket.readyState}`,
+      this.handleConnect = () => {
+        cleanup();
+        this.handleClose = () => {
+          this.triggerError(
+            new Error("TCP connection has been closed unexpectedly"),
           );
-          this.handleError?.(error);
         };
-        process.nextTick(checkSocketReady);
+        this.handleError = (error: Error) => {
+          this.triggerError(error);
+        };
+        this.socket?.on("error", this.handleError);
+        this.socket?.on("close", this.handleClose);
+        resolve(this);
       };
 
-      this.socket.on("ready", this.handleSocketReady);
-      this.socket.on("close", this.handleSocketClose);
+      // this.socket.on('ready', this.handleSocketReady);
+      this.socket.once("connect", this.handleConnect);
+      this.socket.once("close", this.handleClose);
       // feat: this.socket.on => this.socket.once
       this.socket.once("error", this.handleError);
     });
   }
 
   async executeTask<T>(
-    data: Buffer | string | unknown,
-    taskResolve: (data: T) => void,
-    taskReject: (error: Error) => void,
+    data: Buffer | string | object,
+    // taskResolve: (data: T) => void,
+    // taskReject: (error: Error) => void,
     timeout?: number,
   ): Promise<T> {
     return new Promise<T>((resolve, reject) => {
@@ -108,36 +118,38 @@ export class TcpConnection {
       }
 
       const cleanup = () => {
-        if (this.handleSocketData) {
-          this.socket?.removeListener("data", this.handleSocketData);
+        this.socket?.setTimeout(0);
+        if (this.handleData) {
+          this.socket?.removeListener("data", this.handleData);
         }
         if (this.handleSendError) {
           this.socket?.removeListener("error", this.handleSendError);
         }
-        if (this.handleSocketTimeout) {
-          this.socket?.removeListener("timeout", this.handleSocketTimeout);
+        if (this.handleTimeout) {
+          this.socket?.removeListener("timeout", this.handleTimeout);
         }
         this.state = ConnectionState.IDLE;
       };
 
       this.handleSendError = (error: Error) => {
-        taskReject(error);
-        this.triggerError(error);
+        // taskReject(error);
+        // this.triggerError(error); // triggerError is called in `handleError`
         cleanup();
+        this.state = ConnectionState.DESTROYED;
         reject(error);
       };
 
-      this.handleSocketTimeout = () => {
+      this.handleTimeout = () => {
         const error = new Error("TCP connection has timed out");
         this.handleSendError?.(error);
       };
 
-      this.handleSocketData = (packet: Buffer) => {
+      this.handleData = (packet: Buffer) => {
         dataPackets.push(packet);
         if (packet.subarray(-1)[0] === "\r".charCodeAt(0)) {
           try {
             const data: T = JSON.parse(Buffer.concat(dataPackets).toString());
-            taskResolve(data);
+            // taskResolve(data);
             cleanup();
             resolve(data);
           } catch (error) {
@@ -148,11 +160,10 @@ export class TcpConnection {
         }
       };
 
-      this.socket.setTimeout(
-        timeout ?? this.defaultTimeout,
-        this.handleSocketTimeout,
-      );
-      this.socket.once("data", this.handleSocketData);
+      this.socket.setTimeout(timeout ?? this.defaultTimeout);
+      this.socket.once("timeout", this.handleTimeout);
+      this.socket.on("data", this.handleData);
+
       this.socket.once("error", this.handleSendError);
       this.socket.write(sendData, (error) => {
         if (error) {
@@ -169,10 +180,10 @@ export class TcpConnection {
   destroy() {
     this.state = ConnectionState.DESTROYED;
     // Clear socket listeners
-    if (this.readyCheckTimer) {
-      clearTimeout(this.readyCheckTimer);
-      this.readyCheckTimer = undefined;
-    }
+    // if (this.readyCheckTimer) {
+    //   clearTimeout(this.readyCheckTimer);
+    //   this.readyCheckTimer = undefined;
+    // }
     this.socket?.removeAllListeners();
     // Clear error hooks
     this.errorHooks.clear();

@@ -32,7 +32,7 @@ const DEFAULT_MAX_TCP_CONNECT_RETRIES = 3;
 export class TcpPool {
   private pool: Pool<TcpConnection>;
   private state = PoolState.RUNNING;
-  private executingTasks: Set<Promise<unknown>> = new Set();
+  // private executingTasks: Set<Promise<unknown>> = new Set();
 
   constructor(private config: TcpPoolOption) {
     this.state = PoolState.RUNNING;
@@ -50,9 +50,12 @@ export class TcpPool {
       validate: async (connection: TcpConnection): Promise<boolean> => {
         return (
           !connection.isDestroyed() &&
+          connection.isIdle() &&
           connection.socket !== undefined &&
           !connection.socket.destroyed &&
-          connection.socket.readyState === "open"
+          connection.socket.readyState === "open" &&
+          connection.socket.readable &&
+          connection.socket.writable
         );
       },
     };
@@ -72,58 +75,30 @@ export class TcpPool {
     return createPool(factory, poolOptions);
   }
 
-  async ready(): Promise<void> {
-    const warmupPromises: Promise<void>[] = [];
-    for (let i = 0; i < this.config.minConnections; i++) {
-      warmupPromises.push(
-        this.pool
-          .acquire()
-          .then((connection) => {
-            this.pool.release(connection);
-          })
-          .catch((error) => {
-            this.config.logger?.error(
-              `Failed to pre-warm connection: ${JSON.stringify(error)}`,
-            );
-          }),
-      );
-    }
-    this.config.logger?.info(
-      `TCP pool is ready, status: ${JSON.stringify(this.getPoolStatus())}`,
-    );
-    await Promise.allSettled(warmupPromises);
-  }
-
-  async send<T>(data: Buffer | string | unknown): Promise<T> {
+  async send<T>(data: Buffer | string | object): Promise<T> {
     if (this.state === PoolState.DESTROYED) {
       throw new Error("TCP pool has been destroyed");
     }
     if (this.state === PoolState.CLOSING) {
       throw new Error("TCP pool is closing");
     }
-    const promise = new Promise<T>((resolve, reject) => {
-      let connection: TcpConnection | undefined;
-      this.pool
-        .acquire()
-        .then(async (conn) => {
-          connection = conn;
-          await this.assignTask(connection, data, resolve, reject);
-        })
-        .catch((error) => {
-          reject(error);
-        })
-        .finally(() => {
-          if (connection) {
-            this.pool.release(connection);
-          }
-        });
-    });
 
-    this.executingTasks.add(promise);
-    promise.finally(() => {
-      this.executingTasks.delete(promise);
+    const connection = await this.pool.acquire().catch((error) => {
+      this.config.logger?.error(
+        `Failed to acquire connection: ${JSON.stringify(error)}`,
+      );
+      throw error;
     });
-    return promise;
+    try {
+      return await connection.executeTask<T>(data, this.config.sendTimeout);
+    } catch (error) {
+      this.config.logger?.error(
+        `Failed to send data: ${JSON.stringify(error)}`,
+      );
+      throw error;
+    } finally {
+      this.pool.release(connection);
+    }
   }
 
   async destroy(): Promise<void> {
@@ -131,12 +106,10 @@ export class TcpPool {
       return;
     }
     this.state = PoolState.CLOSING;
-    if (this.executingTasks.size > 0) {
-      this.config.logger?.info(
-        `Waiting for ${this.executingTasks.size} executing tasks...`,
-      );
-      await Promise.allSettled(this.executingTasks);
-    }
+    // if (this.executingTasks.size > 0) {
+    //   this.config.logger?.info(`Waiting for ${this.executingTasks.size} executing tasks...`);
+    //   await Promise.allSettled(this.executingTasks);
+    // }
     await this.pool
       .drain()
       .then(() => this.pool.clear())
@@ -211,25 +184,6 @@ export class TcpPool {
     throw new Error(
       `Failed to create TCP connection after ${maxTcpConnectRetries + 1} attempts`,
     );
-  }
-
-  private async assignTask<T>(
-    connection: TcpConnection,
-    data: Buffer | string | unknown,
-    taskResolve: (result: T) => void,
-    taskReject: (error: Error) => void,
-  ): Promise<void> {
-    try {
-      await connection.executeTask(
-        data,
-        taskResolve,
-        taskReject,
-        this.config.sendTimeout,
-      );
-    } catch (error) {
-      this.config.logger?.error(`Assign task error: ${JSON.stringify(error)}`);
-      throw error;
-    }
   }
 
   private destroyConnection(connection: TcpConnection): void {
