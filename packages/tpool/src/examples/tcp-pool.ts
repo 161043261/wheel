@@ -55,15 +55,7 @@ export class TcpPool {
         return this.destroyConnection(connection);
       },
       validate: async (connection: TcpConnection): Promise<boolean> => {
-        return (
-          !connection.isDestroyed() &&
-          connection.isIdle() &&
-          connection.socket !== undefined &&
-          !connection.socket.destroyed &&
-          connection.socket.readyState === "open" &&
-          connection.socket.readable &&
-          connection.socket.writable
-        );
+        return connection.isValid();
       },
     };
     const poolOptions: IOptions = {

@@ -10,7 +10,7 @@ export enum ConnectionState {
 export class TcpConnection {
   public id = uuid();
   public state = ConnectionState.IDLE;
-  public socket?: Socket | undefined = undefined;
+  private socket?: Socket | undefined = undefined;
   private errorHooks: Set<(error: Error) => void> = new Set();
   private handleClose?: () => void;
   private handleError?: (error: Error) => void;
@@ -192,15 +192,14 @@ export class TcpConnection {
     }
   }
 
-  isDestroyed(): boolean {
-    return this.state === ConnectionState.DESTROYED;
-  }
-
-  isIdle(): boolean {
-    return this.state === ConnectionState.IDLE;
-  }
-
-  isAllocated(): boolean {
-    return this.state === ConnectionState.ALLOCATED;
+  isValid() {
+    return (
+      this.state === "IDLE" &&
+      this.socket !== undefined &&
+      !this.socket.destroyed &&
+      this.socket.readyState === "open" &&
+      this.socket.readable &&
+      this.socket.writable
+    );
   }
 }

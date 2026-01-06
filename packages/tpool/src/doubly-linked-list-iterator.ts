@@ -3,9 +3,9 @@ import type {
   IDoublyLinkedListNode,
 } from "./doubly-linked-list.js";
 
-class DoublyLinkedListIterator<T>
-  implements Iterator<IDoublyLinkedListNode<T>>
-{
+class DoublyLinkedListIterator<T> implements Iterator<
+  IDoublyLinkedListNode<T>
+> {
   private readonly list: IDoublyLinkedList<T>;
   private readonly direction: "prev" | "next";
   private readonly startPosition: "tail" | "head";
