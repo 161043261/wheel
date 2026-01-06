@@ -3,8 +3,8 @@ package utils
 import "sync"
 
 type request struct {
-	wg  *sync.WaitGroup
-	res any
+	wg  sync.WaitGroup
+	val any
 	err error
 }
 
@@ -13,29 +13,29 @@ type Throttle struct {
 	key2request map[string]*request
 }
 
-func (t *Throttle) Do(requestKey string, fn func() (res any, err error)) (any, error) {
+func (t *Throttle) Do(key string, fn func() (any, error)) (any, error) {
 	t.mu.Lock()
 	if t.key2request == nil {
 		t.key2request = make(map[string]*request)
 	}
 
-	if req, ok := t.key2request[requestKey]; ok {
+	if req, ok := t.key2request[key]; ok {
 		t.mu.Unlock()
 		req.wg.Wait()
-		return req.res, req.err
+		return req.val, req.err
 	}
 
 	req := new(request)
 	req.wg.Add(1)
-	t.key2request[requestKey] = req
+	t.key2request[key] = req
 	t.mu.Unlock()
 
-	req.res, req.err = fn()
+	req.val, req.err = fn()
 	req.wg.Done()
 
 	t.mu.Lock()
-	delete(t.key2request, requestKey)
+	delete(t.key2request, key)
 	t.mu.Unlock()
 
-	return req.res, req.err
+	return req.val, req.err
 }

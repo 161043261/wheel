@@ -101,7 +101,7 @@ func (g *Group) load(key string) (ByteView, error) {
 }
 
 func (g *Group) loadThrottled(key string) (ByteView, error) {
-	byteView, err := g.throttle.Do(key, func() (res any, err error) {
+	byteView, err := g.throttle.Do(key, func() (any, error) {
 		if g.peerPicker != nil {
 			if peerGetter, ok := g.peerPicker.PickPeer(key); ok {
 				if val, err := g.loadFromPeer(peerGetter, key); err == nil {
