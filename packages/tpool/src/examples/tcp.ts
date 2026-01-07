@@ -1,5 +1,4 @@
 import { Socket, createConnection } from "net";
-import { v4 as uuid } from "uuid";
 
 export enum ConnectionState {
   IDLE = "IDLE",
@@ -8,7 +7,6 @@ export enum ConnectionState {
 }
 
 export class TcpConnection {
-  public id = uuid();
   public state = ConnectionState.IDLE;
   private socket?: Socket | undefined = undefined;
   private errorHooks: Set<(error: Error) => void> = new Set();
