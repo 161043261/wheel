@@ -1,0 +1,7 @@
+{
+  "name": "@wheel/vue-shared",
+  "version": "1.0.0",
+  "private": true,
+  "license": "ISC",
+  "packageManager": "pnpm@10.10.0"
+}

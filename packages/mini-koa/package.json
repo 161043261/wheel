@@ -1,0 +1,18 @@
+{
+  "name": "@wheel/mini-koa",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.28.0",
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^25.0.10",
+    "prettier": "^3.8.1"
+  },
+  "scripts": {
+    "format": "prettier -w ./"
+  }
+}

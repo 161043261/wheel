@@ -1,0 +1,19 @@
+{
+  "name": "@wheel/bytecache",
+  "version": "1.0.0",
+  "author": "https://github.com/161043261",
+  "description": "LRU Cache",
+  "main": "index.js",
+  "keywords": [
+    "LRU",
+    "Cache"
+  ],
+  "sideEffects": false,
+  "license": "ISC",
+  "packageManager": "pnpm@10.20.0",
+  "devDependencies": {
+    "@types/node": "^25.0.3",
+    "rollup": "^4.54.0"
+  },
+  "type": "module"
+}

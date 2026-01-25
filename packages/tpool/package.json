@@ -1,0 +1,54 @@
+{
+  "author": "https://github.com/161043261",
+  "description": "tpool",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@types/ffi-napi": "^4.0.10",
+    "@types/node": "^25.0.3",
+    "@types/ref-napi": "^3.0.12",
+    "rollup": "^4.54.0",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "keywords": [
+    "tpool"
+  ],
+  "license": "MIT",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "name": "@wheel/tpool",
+  "packageManager": "pnpm@10.20.0",
+  "scripts": {
+    "build": "rollup -c",
+    "compile": "tsc && cd ../libheap && pnpm cmake && cp ./build/libheap.so ../tpool/dist/",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest"
+  },
+  "type": "module",
+  "types": "dist/index.d.ts",
+  "version": "1.0.0",
+  "dependencies": {
+    "ffi-napi": "^4.0.3",
+    "ref-array-napi": "^1.2.2",
+    "ref-napi": "^3.0.3",
+    "uuid": "^13.0.0"
+  }
+}

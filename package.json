@@ -1,0 +1,29 @@
+{
+  "name": "wheel",
+  "version": "1.0.0",
+  "description": "wheel",
+  "private": true,
+  "scripts": {
+    "format": "prettier -w ./packages",
+    "prepare": "husky",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "wheel"
+  ],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.28.0",
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.8.0",
+    "vitest": "^4.0.17",
+    "@vitest/coverage-v8": "4.0.16"
+  },
+  "lint-staged": {
+    "*.{json,jsonc,js,jsx,ts,tsx,html,vue,css,md,mdx}": [
+      "pnpm format"
+    ]
+  }
+}

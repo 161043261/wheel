@@ -1,0 +1,36 @@
+{
+  "name": "@wheel/mini-zustand",
+  "version": "1.0.0",
+  "description": "mini-zustand",
+  "main": "src/index.ts",
+  "publishConfig": {
+    "main": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "test": "vitest run"
+  },
+  "author": "161043261.github.io",
+  "license": "ISC",
+  "packageManager": "pnpm@10.10.0",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:161043261/wheel.git"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@testing-library/react": "^16.3.1",
+    "@types/react": "^19.2.7",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "zustand": "^5.0.9",
+    "vitest": "^4.0.17"
+  },
+  "peerDependencies": {
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "@testing-library/dom": "^10.4.1"
+  }
+}
