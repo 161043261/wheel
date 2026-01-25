@@ -34,7 +34,6 @@
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "name": "@wheel/tpool",
-  "packageManager": "pnpm@10.20.0",
   "scripts": {
     "build": "rollup -c",
     "compile": "tsc && cd ../libheap && pnpm cmake && cp ./build/libheap.so ../tpool/dist/",

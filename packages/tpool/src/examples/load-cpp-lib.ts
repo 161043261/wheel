@@ -19,7 +19,7 @@ const double = ref.types.double;
 const int = ref.types.int;
 
 export default function loadCppLib() {
-  const cppLibPath = resolve(dirname__, "../../libheap");
+  const cppLibPath = resolve(dirname__, "../../../libheap/build/libheap.so");
   const cppLib = ffi.Library(cppLibPath, {
     // void* create(int is_min_heap)
     create: [voidPtr, [int]],
