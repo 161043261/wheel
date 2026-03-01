@@ -1,0 +1,25 @@
+{
+  "name": "@wheel/libheap",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "main": "build/Release/heap.node",
+  "types": "index.d.ts",
+  "scripts": {
+    "install": "node-gyp rebuild",
+    "build": "node-gyp rebuild",
+    "cmake": "cmake -S ./ -B ./build && cmake --build ./build"
+  },
+  "dependencies": {
+    "node-addon-api": "^8.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0"
+  },
+  "gypfile": true,
+  "keywords": [
+    "heap",
+    "priority-queue"
+  ],
+  "license": "MIT",
+  "author": "https://github.com/161043261"
+}
